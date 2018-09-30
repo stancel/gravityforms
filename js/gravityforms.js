@@ -1863,10 +1863,11 @@ jQuery( document ).on( 'submit.gravityforms', '.gform_wrapper form', function( e
 	}
 
 	var isSubmit = targetPage === '0',
-		isNextSubmit = ! isSubmit && ( targetPage > sourcePage );
+		isNextSubmit = ! isSubmit && ( targetPage > sourcePage ),
+		isSave = jQuery('#gform_save_' + formID).val() === '1';
 
 	// If submit button is not visible and target page is the next/final page, do not submit.
-	if ( ! submitButton.is( ':visible' ) && ( isSubmit || isNextSubmit ) ) {
+	if ( ! isSave && ! submitButton.is( ':visible' ) && ( isSubmit || isNextSubmit ) ) {
 		window[ 'gf_submitting_' + formID ] = false;
 		formWrapper.find( '.gform_ajax_spinner' ).remove();
 		event.preventDefault();

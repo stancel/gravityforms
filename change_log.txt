@@ -1,12 +1,39 @@
 ------------------------------------------------------------------------------------------------------------------
-Version 2.3.3.2
-	- Fixed the $resume_token parameter of the "gform_incomplete_submission_pre_save" filter being empty.
+Version 2.3.4.1
+	- AF: Fixed field map styles.
+	- Added the "gform_disable_custom_field_names_query" filter providing a way to prevent the postmeta table query from running to improve form editor performance on some sites.
 
 ------------------------------------------------------------------------------------------------------------------
-Version 2.3.3.1
+Version 2.3.4
+	- Added security enhancement.
+	- Added the "gform_pre_handle_confirmation" action.
+	- Added the "gform_pre_entry_detail" action hook which runs before entry detail page is displayed. Credit: Scott Kingsley Clark from Pods Framework.
+	- Added the "gform_post_update_entry_property" action hook which runs after an entry property is updated. Credit: Scott Kingsley Clark from Pods Framework.
+	- Added the "gform_form_export_filename" filter to change form export filename.
+		add_filter( 'gform_form_export_filename', function( $filename ) {
+        	return 'new-filename-without-extension';
+        } );
+	- Added error suppression for chmod() and touch() function calls.
 	- Added the "gform_incomplete_submission_pre_save" filter allowing the entire incomplete submission to be overridden before it is saved to the database.
 	- Added the "gform_incomplete_submission_post_get" filter allowing the entire incomplete submission to be overridden after it is retrieved from the database.
+
+	- Updated the System Status page to display admin messages.
+	- Updated the Add-Ons section of the System Report to remove the redundant "view details" link when the add-ons minimum requirements are not met.
+
+	- Fixed the form failing validation when a field is both required and set to hidden visibility.
+	- Fixed issue with total calculation when using a quantity drop down field with decimal values.
+	- Fixed non-functional save link when the next or submit button is hidden by conditional logic.
+	- Fixed an issue with a localized string.
+	- Fixed an issue when searching Multiselect fields for slashes and double quotes.
+	- Fixed the Enhanced UI styles overriding the styles for other chosen.js enhanced selects located outside the form wrapper.
+	- Fixed the $resume_token parameter of the "gform_incomplete_submission_pre_save" filter being empty.
 	- Fixed the Ajax spinner remaining when the submission is blocked due to the next/submit button being hidden by conditional logic.
+
+	- AF: Updated GFPaymentAddOn::get_entry_by_transaction_id() to search the _gf_addon_payment_transaction table when the supplied transaction ID is not found in the entry table.
+
+	- API: Updated the Web API form submissions endpoint to omit the ID of the created entry from the result if the user being impersonated does not have the capability to view or edit entries.
+	- API: Fixed an issue with the start_date and end_date search criteria where the start_date or end_date is assumed to be today if it's missing.
+	- API: Updated the result returned by GFAPI::submit_form() to include the ID of the entry created from the submission.
 
 ------------------------------------------------------------------------------------------------------------------
 Version 2.3.3

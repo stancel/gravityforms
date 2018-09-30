@@ -1374,6 +1374,18 @@ class GFFormsModel {
 				 * @param string $previous_value The previous property value before the update
 				 */
 				do_action( "gform_update_{$property_name}", $lead_id, $property_value, $previous_value );
+
+				/**
+				 * Fired after an entry property is updated.
+				 *
+				 * @param int    $lead_id        The Entry ID.
+				 * @param string $property_name  The property that was updated.
+				 * @param string $property_value The new value of the property that was updated.
+				 * @param string $previous_value The previous property value before the update.
+				 *
+				 * @since 2.3.3.9
+				 */
+				do_action( "gform_post_update_entry_property", $lead_id, $property_name, $property_value, $previous_value );
 			}
 		}
 
@@ -3421,7 +3433,29 @@ class GFFormsModel {
 		return $post_data;
 	}
 
+	/**
+	 * Retrieves the custom field names (meta keys) for the custom field select in the form editor.
+	 *
+	 * @since unknown
+	 *
+	 * @return array
+	 */
 	public static function get_custom_field_names() {
+		$form_id = absint( rgget( 'id' ) );
+
+		/**
+		 * Allow the postmeta query which retrieves the custom field names (meta keys) to be disabled.
+		 *
+		 * @since 2.3.4.1
+		 *
+		 * @param bool $disable_query Indicates if the custom field names query should be disabled. Default is false.
+		 */
+		$disable_query = gf_apply_filters( array( 'gform_disable_custom_field_names_query', $form_id ), false );
+
+		if ( $disable_query ) {
+			return array();
+		}
+
 		global $wpdb;
 		$sql = "SELECT DISTINCT meta_key
 			FROM $wpdb->postmeta
@@ -4410,7 +4444,7 @@ class GFFormsModel {
 	public static function set_permissions( $path ) {
 		$permission = apply_filters( 'gform_file_permission', 0644, $path );
 		if ( $permission ) {
-			chmod( $path, $permission );
+			@chmod( $path, $permission );
 		}
 	}
 
