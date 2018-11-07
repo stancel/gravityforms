@@ -418,11 +418,20 @@ function gf_reset_to_default(targetId, defaultValue){
 		return;
 	}
 
-	//cascading down conditional logic to children to suppport nested conditions
+	//cascading down conditional logic to children to support nested conditions
 	//text fields and drop downs, filter out list field text fields name with "_shim"
 	var target = jQuery(targetId).find('select, input[type="text"]:not([id*="_shim"]), input[type="number"], textarea');
 
 	var target_index = 0;
+
+	// When a List field is hidden via conditional logic during a page submission, the markup will be reduced to a
+	// single row. Add enough rows/inputs to satisfy the default value.
+	if( defaultValue && target.parents( '.ginput_list' ).length > 0 && target.length < defaultValue.length ) {
+		while( target.length < defaultValue.length ) {
+			gformAddListItem( target.eq( 0 ), 0 );
+			target = jQuery(targetId).find( 'select, input[type="text"]:not([id*="_shim"]), input[type="number"], textarea' );
+		}
+	}
 
 	target.each(function(){
 		var val = "";

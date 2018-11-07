@@ -1,7 +1,37 @@
 ------------------------------------------------------------------------------------------------------------------
-Version 2.3.4.1
-	- AF: Fixed field map styles.
+Version 2.3.6.4
+	- Fixed an issue with conditional logic and pre-populating List fields on multi-page forms.
+	- Fixed notices when uninstalling from the settings page.
+	- Fixed a performance issue while getting entries from the database.
+	- Fixed a JS error related to the character counter script which could occur if the maximum characters setting included invalid characters such as spaces.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.3.6.3
+	- Fixed an issue with the view details link in the dashboard update message.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.3.6.2
+	- Fixed issue where clicking on datepicker input after selecting a date from the datepicker did not correctly reopen the datepicker.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.3.6.1
+	- Fixed an issue in the form editor where the post body field "create content template" setting was available on the post tags field.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.3.6
+	- Fixed an issue with the notification routing email setting being lost on save when the email was pasted.
+	- Fixed issue with product total when setting currency to 3 digit decimals.
+
+------------------------------------------------------------------------------------------------------------------
+Version 2.3.5
+	- Added the "gform_entry_pre_handle_confirmation" filter to allow the entry to be modified before the confirmation is processed.
 	- Added the "gform_disable_custom_field_names_query" filter providing a way to prevent the postmeta table query from running to improve form editor performance on some sites.
+	- Fixed an issue which prevented the previous button working on the last page of a ten page form.
+	- Fixed issue with submit button that prevented forms from being submitted in some situations.
+	- Fixed an issue with the replacement of merge tags in the confirmation redirect URL.
+	- Fixed an issue where a PHP notice could occur and List field values could be omitted from the entry export if the enable columns setting was changed after entries have been received.
+	- AF: Fixed field map styles.
+	- AF: Fixed generic mapping setting custom value input disappearing when value left empty, missing merge tags UI.
 
 ------------------------------------------------------------------------------------------------------------------
 Version 2.3.4

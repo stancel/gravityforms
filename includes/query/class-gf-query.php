@@ -1316,6 +1316,8 @@ class GF_Query {
 			return false;
 		}
 
+		$openssl_encrypted_fields = GFFormsModel::get_openssl_encrypted_fields( $entry['id'] );
+
 		// running entry through gform_get_field_value filter
 		foreach ( $form['fields'] as $field ) {
 			/* @var GF_Field $field */
@@ -1333,7 +1335,7 @@ class GF_Query {
 				}
 			} else {
 				$value = rgar( $db_values, (string) $field->id );
-				if ( GFFormsModel::is_openssl_encrypted_field( $entry['id'], $field->id ) ) {
+				if ( in_array( $field->id, $openssl_encrypted_fields ) ) {
 					$value = GFCommon::openssl_decrypt( $value );
 				}
 				$entry[ $field->id ] = gf_apply_filters( array(

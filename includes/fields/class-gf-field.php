@@ -1054,6 +1054,10 @@ class GF_Field extends stdClass implements ArrayAccess {
 		$this->inputMask      = (bool) $this->inputMask;
 		$this->inputMaskValue = wp_strip_all_tags( $this->inputMaskValue );
 
+		if ( $this->maxLength ) {
+			$this->maxLength = absint( $this->maxLength );
+		}
+
 		if ( $this->inputType ) {
 			$this->inputType = wp_strip_all_tags( $this->inputType );
 		}

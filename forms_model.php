@@ -741,7 +741,17 @@ class GFFormsModel {
 	public static function get_form_count() {
 		global $wpdb;
 		$form_table_name = self::get_form_table_name();
-		$results         = $wpdb->get_results(
+
+		if ( ! GFCommon::table_exists( $form_table_name ) ) {
+			return array(
+				'total'    => 0,
+				'active'   => 0,
+				'inactive' => 0,
+				'trash'    => 0,
+			);
+		}
+
+		$results = $wpdb->get_results(
 			"
             SELECT
             (SELECT count(0) FROM $form_table_name WHERE is_trash = 0) as total,
@@ -4588,12 +4598,14 @@ class GFFormsModel {
 
 	public static function drop_tables() {
 		global $wpdb;
+		remove_filter( 'query', array( 'GFForms', 'filter_query' ) );
 		foreach ( GF_Forms_Model_Legacy::get_legacy_tables() as $table ) {
 			$wpdb->query( "DROP TABLE IF EXISTS $table" );
 		}
 		foreach ( self::get_tables() as $table ) {
 			$wpdb->query( "DROP TABLE IF EXISTS $table" );
 		}
+		add_filter( 'query', array( 'GFForms', 'filter_query' ) );
 	}
 
 	/**
@@ -5608,6 +5620,10 @@ class GFFormsModel {
 
 		$entry_table_name   = self::get_entry_table_name();
 
+		if ( ! GFCommon::table_exists( $entry_table_name ) ) {
+			return 0;
+		}
+
 		$sql = $wpdb->prepare( "SELECT count(id)
 								FROM $entry_table_name
 								WHERE status=%s", $status );
@@ -5623,21 +5639,27 @@ class GFFormsModel {
 			return GF_Forms_Model_Legacy::get_entry_meta_counts();
 		}
 
-		$detail_table_name = self::get_entry_meta_table_name();
 		$meta_table_name = self::get_entry_meta_table_name();
 		$notes_table_name = self::get_entry_notes_table_name();
+
+		if ( ! GFCommon::table_exists( $meta_table_name ) ) {
+			return array(
+				'details' => 0,
+				'meta'    => 0,
+				'notes'   => 0,
+			);
+		}
 
 		$results = $wpdb->get_results(
 			"
             SELECT
-            (SELECT count(0) FROM $detail_table_name) as details,
             (SELECT count(0) FROM $meta_table_name) as meta,
             (SELECT count(0) FROM $notes_table_name) as notes
             "
 		);
 
 		return array(
-			'details' => intval( $results[0]->details ),
+			'details' => intval( $results[0]->meta ),
 			'meta'    => intval( $results[0]->meta ),
 			'notes'   => intval( $results[0]->notes ),
 		);
