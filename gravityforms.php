@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms
 Plugin URI: https://www.gravityforms.com
 Description: Easily create web forms and manage form entries within the WordPress admin.
-Version: 2.4.1
+Version: 2.4.5
 Author: rocketgenius
 Author URI: https://www.rocketgenius.com
 License: GPL-2.0+
@@ -11,7 +11,7 @@ Text Domain: gravityforms
 Domain Path: /languages
 
 ------------------------------------------------------------------------
-Copyright 2009-2018 Rocketgenius, Inc.
+Copyright 2009-2019 Rocketgenius, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -133,7 +133,7 @@ define( 'GF_SUPPORTED_WP_VERSION', version_compare( get_bloginfo( 'version' ), G
  *
  * @var string GF_MIN_WP_VERSION_SUPPORT_TERMS The version number
  */
-define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '4.8' );
+define( 'GF_MIN_WP_VERSION_SUPPORT_TERMS', '4.9' );
 
 
 if ( ! defined( 'GRAVITY_MANAGER_URL' ) ) {
@@ -215,7 +215,7 @@ class GFForms {
 	 *
 	 * @var string $version The version number.
 	 */
-	public static $version = '2.4.1';
+	public static $version = '2.4.5';
 
 	/**
 	 * Handles background upgrade tasks.
@@ -842,7 +842,7 @@ class GFForms {
 				'wp-pointer',
 				'gform_chosen',
 			),
-			'gf_edit_forms_notification' => array(
+			'gf_edit_forms_settings' => array(
 				'thickbox',
 				'editor-buttons',
 				'wp-jquery-ui-dialog',
@@ -917,7 +917,7 @@ class GFForms {
 				'wp-pointer',
 				'gform_chosen',
 			),
-			'gf_edit_forms_notification' => array(
+			'gf_edit_forms_settings' => array(
 				'editor',
 				'word-count',
 				'quicktags',
@@ -938,7 +938,16 @@ class GFForms {
 				'wp-plupload',
 				'gform_placeholder',
 				'gform_json',
+				'gform_gravityforms',
+				'gform_forms',
+				'gform_form_admin',
+				'jquery-ui-datepicker',
+				'gform_masked_input',
+				'sack',
 				'jquery-ui-autocomplete',
+				'wp-tinymce',
+				'wp-tinymce-root',
+				'wp-tinymce-lists',
 			),
 			'gf_new_form'                => array(
 				'thickbox',
@@ -4942,8 +4951,11 @@ class GFForms {
 	 */
 	public static function maybe_display_logging_notice() {
 
+		$notice_disabled = defined( 'GF_LOGGING_DISABLE_NOTICE' ) && GF_LOGGING_DISABLE_NOTICE;
+		$logging_enabled = get_option( 'gform_enable_logging', false ) || is_plugin_active( 'gravityformslogging/logging.php' );
+
 		// If logging is disabled, return.
-		if ( ! ( get_option( 'gform_enable_logging', false ) || is_plugin_active( 'gravityformslogging/logging.php' ) ) || ( defined( 'GF_LOGGING_DISABLE_NOTICE' ) && GF_LOGGING_DISABLE_NOTICE ) ) {
+		if ( $notice_disabled || ! $logging_enabled || ! GFCommon::current_user_can_any( 'gravityforms_edit_settings' ) ) {
 			return;
 		}
 

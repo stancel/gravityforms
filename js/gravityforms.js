@@ -1183,7 +1183,9 @@ var GFMergeTag = function() {
 
 		var fieldId = parseInt(inputId,10);
 		var field = jQuery('#field_' + formId + '_' + fieldId);
-		var input = field.find('input[name^="input_' + inputId + '"], select[name^="input_' + inputId + '"], textarea[name="input_' + inputId + '"]');
+
+		var inputSelector = fieldId == inputId ? 'input[name^="input_' + fieldId + '"]' : 'input[name="input_' + inputId + '"]';
+		var input = field.find( inputSelector + ', select[name^="input_' + inputId + '"], textarea[name="input_' + inputId + '"]');
 
 		// checking conditional logic
 		var isVisible = window['gf_check_field_rule'] ? gf_check_field_rule( formId, fieldId, true, '' ) == 'show' : true,
@@ -1333,25 +1335,30 @@ var GFMergeTag = function() {
 
 	/**
      * Parses the merge tags in the specified text and returns an array of all the matched merge tags
+	 *
 	 * @param text  The text with merge tags to be parsed
+	 * @param regEx The regular expression to be used to parse for merge tags.
+	 *
 	 * @returns Returns an array with all the merge tags that were matched in the original text
 	 */
-	GFMergeTag.parseMergeTags = function( text ) {
+	GFMergeTag.parseMergeTags = function( text, regEx ) {
 
-		var matches = new Array();
-		var regEx = /{[^{]*?:(\d+(\.\d+)?)(:(.*?))?}/i;
+		if( typeof regEx === 'undefined' ) {
+			regEx = /{[^{]*?:(\d+(\.\d+)?)(:(.*?))?}/i;
+		}
 
-		while(regEx.test( text )) {
+		var matches = [];
 
+		while( regEx.test( text ) ) {
 			var i = matches.length;
-			matches[i] = regEx.exec(text)
-			text = text.replace('' + matches[i][0], '');
-
+			matches[i] = regEx.exec( text );
+			text = text.replace( '' + matches[i][0], '' );
 		}
 
 		return matches;
 	}
 }
+
 new GFMergeTag();
 
 
@@ -1533,12 +1540,18 @@ var GFCalc = function(formId, formulaFields){
             var inputId = matches[i][1];
             var fieldId = parseInt(inputId,10);
 
-            var modifier = '';
+            var modifier = 'value';
 			if( matches[i][3] ){
 				modifier = matches[i][3];
 			}
-			else if ( jQuery('#field_' + formId + '_' + fieldId).hasClass('gfield_price') ) {
-                modifier = 'price';
+			else {
+				var is_product_radio =  jQuery('.gfield_price input[name=input_' + fieldId + ']').is('input[type=radio]');
+                var is_product_dropdown = jQuery('.gfield_price select[name=input_' + fieldId + ']').length > 0;
+                var is_option_checkbox = jQuery('.gfield_price input[name="input_' + inputId + '"]').is('input[type=checkbox]');
+
+                if( is_product_dropdown || is_product_radio || is_option_checkbox ) {
+					modifier = 'price';
+				}
 			}
 
 			var isVisible = window['gf_check_field_rule'] ? gf_check_field_rule( formId, fieldId, true, '' ) == 'show' : true;

@@ -2224,7 +2224,7 @@ class GFFormsModel {
 		// Delete from entry meta
 		$sql = $wpdb->prepare( "DELETE FROM $entry_meta_table WHERE form_id=%d AND meta_key = %s", $form_id, $field_id );
 		if ( is_numeric( $field_id ) ) {
-			$sql .= $wpdb->prepare( " OR meta_key LIKE %s", sprintf( '%d.%%', $field_id ) );
+			$sql .= $wpdb->prepare( " OR form_id=%d AND meta_key LIKE %s", $form_id, sprintf( '%d.%%', $field_id ) );
 		}
 		$wpdb->query( $sql );
 
@@ -3137,7 +3137,8 @@ class GFFormsModel {
 
 		$value = $field->get_value_submission( $field_values, $get_from_post );
 
-		if ( $field->get_input_type() == 'list' && $field->enableColumns ) {
+		if ( $field->get_input_type() == 'list' && $field->enableColumns && $get_from_post && rgpost( 'is_submit_' . $field->formId ) ) {
+			/** @var GF_Field_List $field */
 			$value = $field->create_list_array_recursive( $value );
 		}
 
@@ -3627,11 +3628,11 @@ class GFFormsModel {
 			$value = rgget( $name, $field_values );
 		}
 
-		//converting list format
+		// Converting list format
 		if ( RGFormsModel::get_input_type( $field ) == 'list' ) {
 
-			//transforms this: col1|col2,col1b|col2b into this: col1,col2,col1b,col2b
-			$column_count = count( $field->choices );
+			// Transforms this: col1|col2,col1b|col2b into this: col1,col2,col1b,col2b
+			$column_count = is_array( $field->choices ) ? count( $field->choices ) : 0;
 
 			$rows = is_array( $value ) ? $value : explode( ',', $value );
 
@@ -6363,7 +6364,7 @@ class GFFormsModel {
 		} else {
 			if ( isset( $element['conditionalLogic'] ) && is_array( $element['conditionalLogic'] ) && isset( $element['conditionalLogic']['rules'] ) && is_array( $element['conditionalLogic']['rules'] ) ) {
 				foreach ( $element['conditionalLogic']['rules'] as &$rule ) {
-					$value = (string) $rule['value'];
+					$value = (string) rgar( $rule, 'value' );
 					if ( $value !== trim( $value ) ) {
 						$field      = isset( $form['fields'] ) ? GFFormsModel::get_field( $form, $rule['fieldId'] ) : array();
 						$trim_value = apply_filters( 'gform_trim_input_value', true, rgar( $form, 'id' ), $field );
@@ -6864,6 +6865,44 @@ class GFFormsModel {
 		}
 
 		return $rows;
+	}
+
+	/**
+	 * Sanitizes the names of the files that have been uploaded to the tmp directory and sent in
+	 * $_POST['gform_uploaded_files'] and caches them in GFFormsModel::$uploaded_files.
+	 *
+	 * @since 2.4.3.5
+	 *
+	 * @param $form_id
+	 *
+	 * @return array
+	 */
+	public static function set_uploaded_files( $form_id ) {
+		$files = GFCommon::json_decode( stripslashes( GFForms::post( 'gform_uploaded_files' ) ) );
+		if ( ! is_array( $files ) ) {
+			$files = array();
+		}
+
+		foreach ( $files as &$upload_field ) {
+			if ( is_array( $upload_field ) ) {
+				if ( isset( $upload_field[0] ) && is_array( $upload_field[0] ) ) {
+					foreach ( $upload_field as &$upload ) {
+						if ( isset( $upload['temp_filename'] ) ) {
+							$upload['temp_filename'] = sanitize_file_name( basename( $upload['temp_filename'] ) );
+						}
+						if ( isset( $upload['uploaded_filename'] ) ) {
+							$upload['uploaded_filename'] = sanitize_file_name( basename( $upload['uploaded_filename'] ) );
+						}
+					}
+				}
+			} else {
+				$upload_field = basename( $upload_field );
+			}
+		}
+
+		self::$uploaded_files[ $form_id ] = $files;
+
+		return $files;
 	}
 }
 
