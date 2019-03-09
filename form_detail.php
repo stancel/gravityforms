@@ -99,28 +99,6 @@ class GFFormDetail {
 				InsertVariable(element_id, callback);
 			}
 
-
-			function IsValidFormula(formula) {
-				if (formula == '')
-					return true;
-				var patt = /{([^}]+)}/i,
-					exprPatt = /^[0-9 -/*\(\)]+$/i,
-					expr = formula.replace(/(\r\n|\n|\r)/gm, ''),
-					match;
-				while (match = patt.exec(expr)) {
-					expr = expr.replace(match[0], 1);
-				}
-				if (exprPatt.test(expr)) {
-					try {
-						var r = eval(expr);
-						return !isNaN(parseFloat(r)) && isFinite(r);
-					} catch (e) {
-						return false;
-					}
-				} else {
-					return false;
-				}
-			}
 		</script>
 
 		<?php
@@ -2939,12 +2917,6 @@ class GFFormDetail {
 			// Trim form meta values.
 			$form_meta = GFFormsModel::trim_form_meta_values( $form_meta );
 
-			// Save form meta.
-			GFFormsModel::update_form_meta( $id, $form_meta );
-
-			// Update form title.
-			GFAPI::update_form_property( $id, 'title', $form_meta['title'] );
-
 			// Delete fields.
 			if ( ! empty( $deleted_fields ) ) {
 
@@ -2952,24 +2924,42 @@ class GFFormDetail {
 				foreach ( $deleted_fields as $deleted_field ) {
 
 					// Delete field.
-					GFFormsModel::delete_field( $id, $deleted_field );
+					$form_meta = GFFormsModel::delete_field( $form_meta, $deleted_field, false );
 
 				}
 
 			}
 
+			// Save form meta.
+			GFFormsModel::update_form_meta( $id, $form_meta );
+
+			// Update form title.
+			GFAPI::update_form_property( $id, 'title', $form_meta['title'] );
+
 			// Get form meta.
 			$form_meta = RGFormsModel::get_form_meta( $id );
+
+			if ( ! empty( $deleted_fields ) ) {
+				// Remove logic/routing rules based on deleted fields from confirmations and notifications.
+				foreach ( $deleted_fields as $deleted_field ) {
+					$form_meta = GFFormsModel::delete_field_from_confirmations( $form_meta, $deleted_field );
+					$form_meta = GFFormsModel::delete_field_from_notifications( $form_meta, $deleted_field );
+				}
+			}
 
             /**
              * Fires after a form is saved
              *
              * Used to run additional actions after the form is saved
              *
-             * @param array $form_meta The form meta
-             * @param bool  false      Returns false if the form ID already exists.
+             * @since 2.4.6.1 Added the $deleted_fields param.
+             * @since unknown
+             *
+             * @param array $form_meta      The form meta
+             * @param bool  false           Returns false if the form ID already exists.
+             * @param array $deleted_fields The IDs of any fields which have been deleted.
              */
-			do_action( 'gform_after_save_form', $form_meta, false );
+			do_action( 'gform_after_save_form', $form_meta, false, $deleted_fields );
 
 			return array( 'status' => $id, 'meta' => $form_meta );
 
@@ -3026,10 +3016,14 @@ class GFFormDetail {
              *
              * Used to run additional actions after the form is saved
              *
-             * @param array $form_meta The form meta
-             * @param bool  true       Returns true if this is a new form.
+             * @since 2.4.6.1 Added the $deleted_fields param.
+             * @since unknown
+             *
+             * @param array $form_meta      The form meta
+             * @param bool  true            Returns true if this is a new form.
+             * @param array $deleted_fields The IDs of any fields which have been deleted.
              */
-			do_action( 'gform_after_save_form', $form_meta, true );
+			do_action( 'gform_after_save_form', $form_meta, true, array() );
 
 			return array( 'status' => $id * - 1, 'meta' => $form_meta );
 		}

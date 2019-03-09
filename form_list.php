@@ -88,7 +88,7 @@ class GFFormList {
 		<?php if ( GFCommon::current_user_can_any( 'gravityforms_create_form' ) ) { ?>
 
 		<div id="gf_new_form_modal" style="display:none;">
-			<div class="gf_new_form_modal_container">
+			<form class="gf_new_form_modal_container" onsubmit="saveNewForm();return false;">
 
 				<div class="setting-row">
 					<label for="new_form_title"><?php esc_html_e( 'Form Title', 'gravityforms' ); ?>
@@ -108,11 +108,11 @@ class GFFormList {
 					 *
 					 * @param string The HTML rendered for the "New Form" button.
 					 */
-					echo apply_filters( 'gform_new_form_button', '<input id="save_new_form" type="button" class="button button-large button-primary" value="' . esc_html__( 'Create Form', 'gravityforms' ) . '" onclick="saveNewForm();" onkeypress="saveNewForm();" tabindex="9002" />' ); ?>
+					echo apply_filters( 'gform_new_form_button', '<input id="save_new_form" type="submit" class="button button-large button-primary" value="' . esc_html__( 'Create Form', 'gravityforms' ) . '" tabindex="9002" />' ); ?>
 					<div id="gf_new_form_error_message" style="display:inline-block;"></div>
 				</div>
 
-			</div>
+			</form>
 		</div>
 
 		<?php } // - end of new form modal - // ?>
@@ -316,12 +316,6 @@ class GFFormList {
 				resetNewFormModal();
 				tb_show(<?php echo json_encode( esc_html__( 'Create a New Form', 'gravityforms' ) ); ?>, '#TB_inline?width=375&amp;inlineId=gf_new_form_modal');
 				jQuery('#new_form_title').focus();
-
-				jQuery( '#new_form_title').keyup( function( event ) {
-					if (event.keyCode == 13) {
-						saveNewForm();
-					}
-				});
 
 				return false;
 			}
