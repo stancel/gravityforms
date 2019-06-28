@@ -183,7 +183,10 @@ class GFFormList {
 			}
 			function UpdateCount(element_id, change) {
 				var element = jQuery("#" + element_id);
-				var count = parseInt(element.html()) + change
+				var count = parseInt(element.html(),10) + change;
+				if( count < 0 ) {
+					return;
+				}
 				element.html(count + "");
 			}
 
@@ -226,7 +229,7 @@ class GFFormList {
 			if ( rgget( 'filter' ) ) {
 				echo '<input type="hidden" value="' . esc_attr( rgget( 'filter' ) ) . '" name="filter" />';
 			}
-						
+
 			$table->search_box( esc_html__( 'Search Forms', 'gravityforms' ), 'form' );
 		?>
 		</form>
@@ -665,7 +668,6 @@ class GF_Form_List_Table extends WP_List_Table {
 			if ( $this->filter == 'trash' ) {
 				$form_actions['restore'] = array(
 					'label'        => __( 'Restore', 'gravityforms' ),
-					'title'        => __( 'Restore', 'gravityforms' ),
 					'url'          => '#',
 					'onclick'      => 'RestoreForm(' . absint( $form->id ) . ');',
 					'onkeypress'   => 'RestoreForm(' . absint( $form->id ) . ');',
@@ -674,7 +676,6 @@ class GF_Form_List_Table extends WP_List_Table {
 				);
 				$form_actions['delete']  = array(
 					'label'        => __( 'Delete permanently', 'gravityforms' ),
-					'title'        => __( 'Delete permanently', 'gravityforms' ),
 					'menu_class'   => 'delete',
 					'url'          => '#',
 					'onclick'      => 'ConfirmDeleteForm(' . absint( $form->id ) . ');',
@@ -693,7 +694,6 @@ class GF_Form_List_Table extends WP_List_Table {
 
 				$form_actions['duplicate'] = array(
 					'label'        => __( 'Duplicate', 'gravityforms' ),
-					'title'        => __( 'Duplicate this form', 'gravityforms' ),
 					'url'          => '#',
 					'onclick'      => 'DuplicateForm(' . absint( $form->id ) . ');return false;',
 					'onkeypress'   => 'DuplicateForm(' . absint( $form->id ) . ');return false;',
@@ -703,7 +703,7 @@ class GF_Form_List_Table extends WP_List_Table {
 
 				$form_actions['trash'] = array(
 					'label'        => __( 'Trash', 'gravityforms' ),
-					'title'        => __( 'Move this form to the trash', 'gravityforms' ),
+					'aria-label'        => __( 'Move this form to the trash', 'gravityforms' ),
 					'url'          => '#',
 					'onclick'      => 'TrashForm(' . absint( $form->id ) . ');return false;',
 					'onkeypress'   => 'TrashForm(' . absint( $form->id ) . ');return false;',
@@ -757,14 +757,24 @@ class GF_Form_List_Table extends WP_List_Table {
 			$form_id = rgpost( 'single_action_argument' );
 			switch ( $single_action ) {
 				case 'trash' :
-					$trashed = RGFormsModel::trash_form( $form_id );
-					$message = is_wp_error( $trashed ) ? $trashed->get_error_message() : __( 'Form moved to the trash.', 'gravityforms' );
-					$message_class = is_wp_error( $trashed ) ? 'error' : 'updated';
+					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
+						$trashed       = RGFormsModel::trash_form( $form_id );
+						$message       = is_wp_error( $trashed ) ? $trashed->get_error_message() : __( 'Form moved to the trash.', 'gravityforms' );
+						$message_class = is_wp_error( $trashed ) ? 'error' : 'updated';
+					} else {
+						$message       = __( "You don't have adequate permission to trash forms.", 'gravityforms' );
+						$message_class = 'error';
+					}
 					break;
 				case 'restore' :
-					$restored = RGFormsModel::restore_form( $form_id );
-					$message = is_wp_error( $restored ) ? $restored->get_error_message() : __( 'Form restored.', 'gravityforms' );
-					$message_class = is_wp_error( $restored ) ? 'error' : 'updated';
+					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
+						$restored      = RGFormsModel::restore_form( $form_id );
+						$message       = is_wp_error( $restored ) ? $restored->get_error_message() : __( 'Form restored.', 'gravityforms' );
+						$message_class = is_wp_error( $restored ) ? 'error' : 'updated';
+					} else {
+						$message       = __( "You don't have adequate permission to restore forms.", 'gravityforms' );
+						$message_class = 'error';
+					}
 					break;
 				case 'delete' :
 					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
@@ -777,9 +787,14 @@ class GF_Form_List_Table extends WP_List_Table {
 					}
 					break;
 				case 'duplicate' :
-					$duplicated = RGFormsModel::duplicate_form( $form_id );
-					$message = is_wp_error( $duplicated ) ? $duplicated->get_error_message() : __( 'Form duplicated.', 'gravityforms' );
-					$message_class = is_wp_error( $duplicated ) ? 'error' : 'updated';
+					if ( GFCommon::current_user_can_any( 'gravityforms_create_form' ) ) {
+						$duplicated    = RGFormsModel::duplicate_form( $form_id );
+						$message       = is_wp_error( $duplicated ) ? $duplicated->get_error_message() : __( 'Form duplicated.', 'gravityforms' );
+						$message_class = is_wp_error( $duplicated ) ? 'error' : 'updated';
+					} else {
+						$message       = __( "You don't have adequate permission to duplicate forms.", 'gravityforms' );
+						$message_class = 'error';
+					}
 					break;
 
 			}
@@ -791,15 +806,26 @@ class GF_Form_List_Table extends WP_List_Table {
 
 					check_admin_referer( "gf_delete_form_{$form_id}" );
 
-					$trashed = RGFormsModel::trash_form( $form_id );
-					$message = is_wp_error( $trashed ) ? $trashed->get_error_message() : __( 'Form moved to the trash.', 'gravityforms' );
-					$message_class = is_wp_error( $trashed ) ? 'error' : 'updated';
+					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
+						$trashed       = RGFormsModel::trash_form( $form_id );
+						$message       = is_wp_error( $trashed ) ? $trashed->get_error_message() : __( 'Form moved to the trash.', 'gravityforms' );
+						$message_class = is_wp_error( $trashed ) ? 'error' : 'updated';
+					} else {
+						$message       = __( "You don't have adequate permission to trash forms.", 'gravityforms' );
+						$message_class = 'error';
+					}
 					break;				
 				case 'duplicate' :
 					check_ajax_referer( "gf_duplicate_form_{$form_id}" );
-					$duplicated = RGFormsModel::duplicate_form( $form_id );
-					$message = is_wp_error( $duplicated ) ? $duplicated->get_error_message() : __( 'Form duplicated.', 'gravityforms' );
-					$message_class = is_wp_error( $duplicated ) ? 'error' : 'updated';
+
+					if ( GFCommon::current_user_can_any( 'gravityforms_create_form' ) ) {
+						$duplicated    = RGFormsModel::duplicate_form( $form_id );
+						$message       = is_wp_error( $duplicated ) ? $duplicated->get_error_message() : __( 'Form duplicated.', 'gravityforms' );
+						$message_class = is_wp_error( $duplicated ) ? 'error' : 'updated';
+					} else {
+						$message       = __( "You don't have adequate permission to duplicate forms.", 'gravityforms' );
+						$message_class = 'error';
+					}
 					break;
 
 			}
@@ -814,12 +840,20 @@ class GF_Form_List_Table extends WP_List_Table {
 
 			switch ( $bulk_action ) {
 				case 'trash':
-					GFFormsModel::trash_forms( $form_ids );
-					$message = _n( '%s form moved to the trash.', '%s forms moved to the trash.', $form_count, 'gravityforms' );
+					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
+						GFFormsModel::trash_forms( $form_ids );
+						$message = _n( '%s form moved to the trash.', '%s forms moved to the trash.', $form_count, 'gravityforms' );
+					} else {
+						$message = __( "You don't have adequate permissions to trash forms.", 'gravityforms' );
+					}
 					break;
 				case 'restore':
-					GFFormsModel::restore_forms( $form_ids );
-					$message = _n( '%s form restored.', '%s forms restored.', $form_count, 'gravityforms' );
+					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
+						GFFormsModel::restore_forms( $form_ids );
+						$message = _n( '%s form restored.', '%s forms restored.', $form_count, 'gravityforms' );
+					} else {
+						$message = __( "You don't have adequate permissions to restore forms.", 'gravityforms' );
+					}
 					break;
 				case 'delete':
 					if ( GFCommon::current_user_can_any( 'gravityforms_delete_forms' ) ) {
