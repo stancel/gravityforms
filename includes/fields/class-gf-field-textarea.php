@@ -68,6 +68,8 @@ class GF_Field_Textarea extends GF_Field {
 
 		if ( $this->get_allowable_tags() === false ) {
 			$value = esc_textarea( $value );
+		} else {
+			$value = wp_kses_post( $value );
 		}
 
 		//see if the field is set to use the rich text editor

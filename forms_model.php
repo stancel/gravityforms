@@ -3354,7 +3354,13 @@ class GFFormsModel {
 				break;
 
 			case 'ends_with' :
+				// If target value is a 0 set $val2 to 0 rather than the empty string it currently is to prevent false positives.
+				if ( empty( $val2 ) ) {
+					$val2 = 0;
+				}
+
 				$start = strlen( $val1 ) - strlen( $val2 );
+
 				if ( $start < 0 ) {
 					return false;
 				}
@@ -5420,6 +5426,9 @@ class GFFormsModel {
 
 		$drop_tables = array_merge( $drop_tables, $legacy_tables );
 
+		// Prevent the legacy table query notice when they are dropped by wp_uninitialize_site().
+		remove_filter( 'query', array( 'GFForms', 'filter_query' ) );
+
 		return $drop_tables;
 	}
 
@@ -7122,7 +7131,7 @@ class GFFormsModel {
 
 		$recent_form_ids = get_user_meta( $current_user_id, 'gform_recent_forms', true );
 
-		if ( empty( $recent_form_ids ) ) {
+		if ( empty( $recent_form_ids ) || ! is_array( $recent_form_ids ) ) {
 			$all_form_ids    = self::get_form_ids();
 			$all_form_ids    = array_reverse( $all_form_ids );
 			$recent_form_ids = array_slice( $all_form_ids, 0, 10 );
