@@ -1323,6 +1323,18 @@ abstract class GFFeedAddOn extends GFAddOn {
 			$result = $this->insert_feed( $form_id, true, $settings );
 		}
 
+		/**
+		 * Perform a custom action when a feed is saved.
+		 *
+		 * @param string  $feed_id 	The ID of the feed which was saved.
+		 * @param int 	  $form_id 	The current form ID associated with the feed.
+		 * @param array   $settings	An array containing the settings and mappings for the feed.
+		 * @param GFAddOn $addon 	The current instance of the GFAddOn object which extends GFFeedAddOn or GFPaymentAddOn (i.e. GFCoupons, GF_User_Registration, GFStripe).
+		 *
+		 * @since 2.4.12.3
+		 */
+		do_action( 'gform_post_save_feed_settings', $result, $form_id, $settings, $this );
+
 		return $result;
 	}
 

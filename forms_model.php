@@ -5072,7 +5072,7 @@ class GFFormsModel {
 				}
 			} else {
 				// Deleting details for this field
-				if ( is_array( $field->inputs ) ) {
+				if ( is_array( $field->get_entry_inputs() ) ) {
 					$_input_id = ( false === strpos( $input_id, '.' ) ) ? sprintf( '%d.%%', $input_id ) : $input_id;
 					$sql = $wpdb->prepare( "DELETE FROM $entry_meta_table_name WHERE entry_id=%d AND meta_key LIKE %s ", $entry_id, $_input_id );
 				} else {
@@ -7005,7 +7005,7 @@ class GFFormsModel {
 		if ( isset( $logic['rules'] ) && is_array( $logic['rules'] ) ) {
 			foreach ( $logic['rules'] as &$rule ) {
 				if ( isset( $rule['fieldId'] ) ) {
-					// Field ID could be meta key
+					// Field ID could be meta key.
 					$rule['fieldId'] = wp_strip_all_tags( $rule['fieldId'] );
 				}
 				if ( isset( $rule['operator'] ) ) {
@@ -7014,7 +7014,11 @@ class GFFormsModel {
 				}
 
 				if ( isset( $rule['value'] ) ) {
-					$rule['value'] = wp_strip_all_tags( $rule['value'] );
+					// Strip scripts but don't encode.
+					$allowed_protocols = wp_allowed_protocols();
+					$rule['value']     = wp_kses_no_null( $rule['value'], array( 'slash_zero' => 'keep' ) );
+					$rule['value']     = wp_kses_hook( $rule['value'], 'post', $allowed_protocols );
+					$rule['value']     = wp_kses_split( $rule['value'], 'post', $allowed_protocols );
 				}
 			}
 		}
